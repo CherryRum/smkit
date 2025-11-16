@@ -201,7 +201,7 @@ Modern web application built with Vue 3 + TypeScript, providing better user expe
 
 ```bash
 # Clone the repository
-git clone https://github.com/linyuliu/smkit.git
+git clone https://github.com/CherryRum/smkit.git
 cd smkit
 
 # Install dependencies

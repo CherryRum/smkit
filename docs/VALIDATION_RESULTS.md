@@ -167,7 +167,7 @@ $ yamllint .github/workflows/publish.yml
   "jsdelivr": "./dist/smkit.umd.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/linyuliu/smkit.git"
+    "url": "https://github.com/CherryRum/smkit.git"
   },
   "bugs": {
     "url": "https://github.com/linyuliu/smkit/issues"

@@ -201,7 +201,7 @@ console.log('签名验证:', isValid ? '✅ 通过' : '❌ 失败');
 
 ```bash
 # 克隆仓库
-git clone https://github.com/linyuliu/smkit.git
+git clone https://github.com/CherryRum/smkit.git
 cd smkit
 
 # 安装依赖

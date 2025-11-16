@@ -32,7 +32,7 @@ formats: ['es', 'cjs', 'umd']  // 原来只有 ['es', 'cjs']
   "jsdelivr": "./dist/smkit.umd.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/linyuliu/smkit.git"
+    "url": "https://github.com/CherryRum/smkit.git"
   }
 }
 ```
