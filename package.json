@@ -1,0 +1,79 @@
+{
+  "name": "smkit",
+  "version": "0.9.1",
+  "description": "中国国密算法（SM2, SM3, SM4, ZUC）的纯 TypeScript 实现 / Pure TypeScript implementation of Chinese national cryptographic algorithms (SM2, SM3, SM4, ZUC)",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "unpkg": "./dist/index.umd.js",
+  "jsdelivr": "./dist/index.umd.js",
+  "browser": {
+    "./dist/index.cjs": "./dist/index.umd.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "type-check": "tsc --noEmit",
+    "demo:vue": "cd demo-vue && npm run dev",
+    "prepublishOnly": "npm run type-check && npm run test && npm run build"
+  },
+  "keywords": [
+    "sm2",
+    "sm3",
+    "sm4",
+    "zuc",
+    "cryptography",
+    "chinese-standard",
+    "state-cipher",
+    "gm",
+    "guomi",
+    "eea3",
+    "eia3",
+    "lte",
+    "国密",
+    "商密",
+    "加密",
+    "签名",
+    "信创"
+  ],
+  "author": "yulin.1996@foxmail.com",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/linyuliu/smkit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/linyuliu/smkit/issues"
+  },
+  "homepage": "https://github.com/linyuliu/smkit#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "vite": "7.1.11",
+    "vite-plugin-dts": "^3.0.0",
+    "vitest": "^1.0.0"
+  },
+  "dependencies": {
+    "@noble/curves": "^2.0.1",
+    "@noble/hashes": "^2.0.1"
+  }
+}
