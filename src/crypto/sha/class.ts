@@ -14,7 +14,7 @@ abstract class SHABase {
   protected hasher: any;
   protected outputFormat: OutputFormatType;
 
-  constructor(hasher: any, outputFormat: OutputFormatType = OutputFormat.HEX) {
+  protected constructor(hasher: any, outputFormat: OutputFormatType = OutputFormat.HEX) {
     this.hasher = hasher.create();
     this.outputFormat = outputFormat;
   }
