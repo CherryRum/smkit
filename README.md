@@ -66,7 +66,7 @@ gmkit 是一个功能完整的国密算法工具库，让您在前端和 Node.js
 ### 核心优势
 
 - **生产就绪**: 通过 267+ 单元测试，覆盖核心功能和常见使用场景
-- **标准合规**: 严格遵循 GM/T 国家标准（GM/T 0003-2012、GM/T 0004-2012 等）
+- **标准合规**: 严格遵循 GM/T 国家标准（GM/T 0003-2012、GM/T 0004-2012 、GM/T 0009-2023等）
 - **易于集成**: 提供详细的 [Hutool 集成指南](./docs/HUTOOL-INTEGRATION.zh-CN.md)，轻松对接 Java 后端
 - **开发体验**: 清晰的错误提示、完整的文档、丰富的示例代码
 
@@ -135,7 +135,7 @@ const { digest, sm4Encrypt, generateKeyPair } = require('gmkit');
 const hash = digest('Hello, SM3!');
 ```
 
-#### **方式 3: UMD（浏览器直接引入）**
+#### **方式 3: UMD/iife（浏览器直接引入）**
 
 适用于不使用构建工具的项目
 
