@@ -10,16 +10,36 @@ import {
   verify,
   keyExchange,
 } from '../src/crypto/sm2';
-import { SM2CipherMode, DEFAULT_USER_ID } from '../src/types/constants';
+import { SM2CipherMode, DEFAULT_USER_ID } from '../src';
 
 describe('SM2 国密算法测试', () => {
   describe('密钥对生成', () => {
-    it('应该能够生成密钥对', () => {
+    it('应该能够生成密钥对[非压缩格式]', () => {
       const keyPair = generateKeyPair();
       expect(keyPair.publicKey).toBeTruthy();
       expect(keyPair.privateKey).toBeTruthy();
       expect(keyPair.publicKey).toMatch(/^[0-9a-f]+$/);
       expect(keyPair.privateKey).toMatch(/^[0-9a-f]+$/);
+      //公钥长度应为130（非压缩格式）
+      expect(keyPair.publicKey.length).toBe(130);
+      //公钥应以04开头
+      expect(keyPair.publicKey.startsWith('04')).toBe(true);
+      //私钥长度应为64
+      expect(keyPair.privateKey.length).toBe(64);
+    });
+
+    it('应该能够生成密钥对[压缩格式]', () => {
+      const keyPair = generateKeyPair(true);
+      expect(keyPair.publicKey).toBeTruthy();
+      expect(keyPair.privateKey).toBeTruthy();
+      expect(keyPair.publicKey).toMatch(/^[0-9a-f]+$/);
+      expect(keyPair.privateKey).toMatch(/^[0-9a-f]+$/);
+      //公钥长度应为66（压缩格式）
+      expect(keyPair.publicKey.length).toBe(66);
+      //公钥应以02或03开头
+      expect(keyPair.publicKey.startsWith('02') || keyPair.publicKey.startsWith('03')).toBe(true);
+      //私钥长度应为64
+      expect(keyPair.privateKey.length).toBe(64);
     });
 
     it('应该每次生成不同的密钥', () => {
