@@ -1,403 +1,201 @@
-
-
 <div align="center">
 
-[](https://www.npmjs.com/package/gmkitx)
-[](https://www.npmjs.com/package/gmkitx)
-[](https://github.com/CherryRum/gmkit/blob/main/LICENSE)
-[](https://www.typescriptlang.org/)
 
-**GMKit - 国密算法与国际标准算法库**
+# GMKitX
+**国密算法与国际标准的全场景 TypeScript 解决方案**
 
-一个纯 TypeScript 实现的密码学工具集，内建支持：
+[![NPM Version](https://img.shields.io/npm/v/gmkitx?style=flat-square&color=3b82f6&label=npm)](https://www.npmjs.com/package/gmkitx)
+[![License](https://img.shields.io/badge/license-Apache--2.0-green?style=flat-square)](./LICENSE)
+[![TypeScript](https://img.shields.io/badge/written%20in-TypeScript-blue?style=flat-square)](https://www.typescriptlang.org/)
 
-* **国密算法**: **SM2、SM3、SM4、ZUC**
-* **国际标准**: **SHA-1、SHA-256、SHA-384、SHA-512**
+[特性概览](#-核心特性) • [安装指南](#-安装与环境) • [快速上手](#-快速上手) • [API 参考](#-api-深度指南)
 
-库提供统一的 API 体验，支持函数式、模块命名空间及面向对象调用。
 
+---
+
+`gmkitx` 是一套纯 **TypeScript** 实现的密码学工具集。它不仅严格复现了 **SM2 / SM3 / SM4 / ZUC** 等国密标准，还集成了 **SHA** 系列国际算法。
+设计的初衷很简单：提供一套**同构**（Isomorphic）的代码库，让开发者在**服务端**和 **现代浏览器** 前端，都能使用完全一致的 API 进行加密、解密、签名与哈希运算。
 </div>
 
------
+## ✨ 核心特性
 
-## ✨ 特性一览
+我们推崇**极简**与**灵活**并存的工程理念：
 
-* 📦 **算法集成**：SM2 / SM3 / SM4 / ZUC 国密算法与 SHA 系列（SHA-1 / 256 / 384 / 512）
-* 🧩 **灵活导入**：支持命名空间、模块及具名函数导入（与源码结构一致）
-* 🧠 **双 API 风格**：提供纯函数式调用与面向对象（Class）封装
-* 🌐 **同构支持**：一套代码，同时运行于 Node.js（\>= 18）与现代浏览器
-* 📚 **强类型支持**：完整的 TypeScript 类型定义
-* 🧱 **CDN 友好**：提供 UMD 构建包，支持 `<script>` 标签引入（全局 `GMKit`）
-* 🔒 **遵循标准**：严格对齐 GM/T 系列国密标准文档实现
------
+* **全栈覆盖**：一套代码无缝运行于 **Node.js (>= 18)** 与浏览器环境，无需 polyfill。
+* **双重范式**：既支持现代的 **纯函数式（Functional）** 调用，也保留了传统的 **面向对象（OOP）** 封装。
+* **按需加载**：支持 Tree-shaking，你可以只导入 `sm2`，而不必引入整个库。
+* **类型安全**：内建完整的 `.d.ts` 类型定义，编码即文档。
+* **标准对齐**：严格遵循 GM/T 系列国密标准文档，兼容 OpenSSL 等主流实现的密文格式。
 
-## 🚀 安装
+---
+
+## 🚀 安装与环境
+
+**环境要求**：Node.js **>= 18** 或任意支持 ES6+ 的现代浏览器。
 
 ```bash
-# 使用 npm
+# npm
 npm install gmkitx
 
-# 使用 pnpm
+# pnpm (推荐)
 pnpm add gmkitx
 
-# 使用 yarn
+# yarn
 yarn add gmkitx
-```
-
-**Node.js** 版本要求：**\>= 18**
+````
 
 -----
 
-## 🔰 快速开始（5 分钟上手）
+## ⚡ 快速上手
 
-### 1\. 函数式 API (推荐)
+### 风格一：函数式编程（推荐）
+
+适合现代前端开发，利于 Tree-shaking，代码更简洁。
 
 ```ts
 import {
-  digest,
-  sm4Encrypt,
+  digest,       // SM3
+  sm4Encrypt,   // SM4
   sm4Decrypt,
-  generateKeyPair,
-  sm2Encrypt,
+  sm2Encrypt,   // SM2
   sm2Decrypt,
-  sha256,
+  generateKeyPair,
+  CipherMode,
+  PaddingMode
 } from 'gmkitx';
-import { CipherMode, PaddingMode } from 'gmkitx';
 
-// SM3 哈希
+// 1. SM3 摘要
 const hash = digest('Hello, SM3!');
-console.log('SM3:', hash);
 
-// SM4 对称加密
-const key = '0123456789abcdeffedcba9876543210'; // 128 位 hex 密钥
-const plaintext = '我的密码';
-const ciphertext = sm4Encrypt(key, plaintext, {
+// 2. SM4 对称加密 (CBC模式)
+const key = '0123456789abcdeffedcba9876543210'; // 128位密钥
+const iv  = 'fedcba98765432100123456789abcdef'; // 初始化向量
+
+const ciphertext = sm4Encrypt(key, '我的机密数据', {
   mode: CipherMode.CBC,
   padding: PaddingMode.PKCS7,
-  iv: 'fedcba98765432100123456789abcdef',
-});
-const decrypted = sm4Decrypt(key, ciphertext, {
-  mode: CipherMode.CBC,
-  padding: PaddingMode.PKCS7,
-  iv: 'fedcba98765432100123456789abcdef',
+  iv,
 });
 
-// SM2 非对称加密
-const keyPair = generateKeyPair();
-const enc = sm2Encrypt(keyPair.publicKey, 'Hello, SM2!');
-const dec = sm2Decrypt(keyPair.privateKey, enc);
-
-// SHA-256（国际标准）
-const sha = sha256('Hello, SHA-256!');
+// 3. SM2 非对称加密
+const { publicKey, privateKey } = generateKeyPair();
+const encData = sm2Encrypt(publicKey, 'Hello, SM2!');
+const decData = sm2Decrypt(privateKey, encData);
 ```
 
-### 2\. 模块命名空间导入
+### 风格二：命名空间导入
 
-与源码中的模块导出结构一一对应：
+结构清晰，适合大型项目统一管理加密模块。
 
 ```ts
-import { sm2, sm3, sm4, zuc, sha } from 'gmkitx';
+import { sm2, sm3, sm4, sha } from 'gmkitx';
 
-// SM3
+// 统一入口调用
 const hash = sm3.digest('Hello');
+const sig  = sm2.sign(privateKey, 'Message');
+const verified = sm2.verify(publicKey, 'Message', sig);
 
-// SM4
-const encrypted = sm4.encrypt('0123456789abcdeffedcba9876543210', 'data');
-
-// SM2
-const kp = sm2.generateKeyPair();
-const sig = sm2.sign(kp.privateKey, 'message');
-const ok = sm2.verify(kp.publicKey, 'message', sig);
-
-// ZUC
-const zucCipher = zuc.encrypt('00112233445566778899aabbccddeeff', 'ffeeddccbbaa99887766554433221100', 'Hello');
-
-// SHA 系列
-const sha512 = sha.sha512('Hello');
+// SHA 国际标准
+const sha512Hash = sha.sha512('Hello World');
 ```
 
-命名空间里同时挂了函数和类，例如：`sm2.SM2`、`sm3.SM3`、`sha.SHA256` 等。
+### 风格三：浏览器脚本 (CDN)
 
-### 3\. 默认导入 (适合 UMD / 老项目)
-
-```ts
-import gmkit from 'gmkitx';
-
-const hash = gmkit.digest('Hello');       // 等价于 sm3.digest
-const sm4Encrypted = gmkit.sm4Encrypt(
-  '0123456789abcdeffedcba9876543210',
-  'data',
-);
-const sha256Hash = gmkit.sha256('Hello');
-```
-
------
-
-## 🌐 浏览器直接使用 (UMD / CDN)
+通过 UMD 构建包，在 HTML 中直接使用全局变量 `GMKit`。
 
 ```html
-<script src="https://unpkg.com/gmkitx@latest/dist/index.global.js"></script>
+<script src="[https://unpkg.com/gmkitx@latest/dist/index.global.js](https://unpkg.com/gmkitx@latest/dist/index.global.js)"></script>
 <script>
-  // 全局命名空间：GMKit（对应默认导出）
-  const hash = GMKit.digest('Hello, SM3!');
-  const key = '0123456789abcdeffedcba9876543210';
-  const encrypted = GMKit.sm4Encrypt(key, '前端加密');
-  const decrypted = GMKit.sm4Decrypt(key, encrypted);
-  console.log({ hash, encrypted, decrypted });
+  const { digest, sm4Encrypt } = GMKit;
+  
+  console.log('SM3 Hash:', digest('Browser Test'));
 </script>
 ```
 
 -----
 
-## 🧠 API 概览
+## 📚 API 深度指南
 
-本库的导出围绕以下几类：
+### SM2 (椭圆曲线公钥密码)
 
-* **模块命名空间**：`sm2 / sm3 / sm4 / zuc / sha`
-* **具名函数导出**：直观函数风格
-* **面向对象类**：`SM2 / SM3 / SM4 / ZUC / SHA256 / SHA384 / SHA512 / SHA1`
-* **常量和类型**：`CipherMode / PaddingMode / SM2CipherMode / OutputFormat / OID / DEFAULT_USER_ID` 等
-* **工具函数**：字节 / 字符串 / hex / base64 转换、ASN.1 编解码等
-
-下面是精简版的使用参考。
-
-### SM3 (哈希算法)
+支持加密、解密、签名、验签及密钥对生成。默认使用 `C1C3C2` 模式。
 
 ```ts
-import { digest, hmac, SM3, OutputFormat } from 'gmkitx';
+import { SM2, SM2CipherMode } from 'gmkitx';
 
-// 函数式
-const hash = digest('Hello, SM3!');
-const mac = hmac('secret', 'data');
+// 面向对象方式
+const sm2Instance = SM2.fromPrivateKey(privateKey);
 
-// Base64 输出
-const hashBase64 = digest('Hello', { outputFormat: OutputFormat.BASE64 });
+// 签名与验签
+const signature = sm2Instance.sign('核心指令');
+const isValid = sm2Instance.verify('核心指令', signature);
 
-// 面向对象 + 增量哈希
-const sm3 = new SM3();
-sm3.update('Hello, ').update('World');
-const result = sm3.digest();
+// 显式指定加密模式 (C1C2C3 或 C1C3C2)
+const cipher = sm2Instance.encrypt('数据', SM2CipherMode.C1C3C2);
 ```
 
-### SHA 系列 (国际标准哈希)
+### SM4 (无线局域网标准分组算法)
+
+支持多种分组模式：`ECB` | `CBC` | `CTR` | `CFB` | `OFB` | `GCM`。
 
 ```ts
-import { sha256, sha384, sha512, sha1, SHA256, OutputFormat } from 'gmkitx';
-
-// 函数式
-const h256 = sha256('data');
-const h512 = sha512('data');
-
-// 面向对象
-const sha = new SHA256(OutputFormat.BASE64);
-sha.update('A').update('B');
-const res = sha.digest();
-```
-
-### SM4 (分组对称密码)
-
-```ts
-import { sm4Encrypt, sm4Decrypt, SM4, CipherMode, PaddingMode } from 'gmkitx';
+import { SM4, CipherMode, PaddingMode } from 'gmkitx';
 
 const key = '0123456789abcdeffedcba9876543210';
-const iv = 'fedcba98765432100123456789abcdef';
-
-// 函数式
-const cbcCipher = sm4Encrypt(key, 'Hello', {
-  mode: CipherMode.CBC,
-  padding: PaddingMode.PKCS7,
-  iv,
-});
-const cbcPlain = sm4Decrypt(key, cbcCipher, {
-  mode: CipherMode.CBC,
-  padding: PaddingMode.PKCS7,
-  iv,
+const sm4 = new SM4(key, { 
+  mode: CipherMode.GCM, // 使用 GCM 模式
+  padding: PaddingMode.NONE 
 });
 
-// 面向对象
-const sm4 = new SM4(key, { mode: CipherMode.ECB, padding: PaddingMode.PKCS7 });
-const cipher = sm4.encrypt('Hello, SM4');
-const plain = sm4.decrypt(cipher);
+// GCM 模式会返回密文与认证标签(AuthTag)
+const { ciphertext, tag } = sm4.encrypt('敏感信息', { iv: '...' });
 ```
 
-### SM2 (椭圆曲线非对称密码)
+### SM3 / SHA (消息摘要)
+
+支持流式更新（Update），适合处理大文件。
 
 ```ts
-import {
-  generateKeyPair,
-  getPublicKeyFromPrivateKey,
-  sm2Encrypt,
-  sm2Decrypt,
-  sign,
-  verify,
-  SM2,
-  SM2CipherMode,
-} from 'gmkitx';
+import { SM3, OutputFormat } from 'gmkitx';
 
-// 生成密钥对
-const kp = generateKeyPair();
+const sm3 = new SM3();
 
-// 加密 / 解密
-const enc = sm2Encrypt(kp.publicKey, 'Hello, SM2!', SM2CipherMode.C1C3C2);
-const dec = sm2Decrypt(kp.privateKey, enc);
+sm3.update('第一部分数据');
+sm3.update('第二部分数据');
 
-// 签名 / 验签
-const sig = sign(kp.privateKey, 'message');
-const ok = verify(kp.publicKey, 'message', sig);
-
-// 面向对象
-const sm2 = SM2.fromPrivateKey(kp.privateKey);
-const sig2 = sm2.sign('hello');
-const ok2 = sm2.verify('hello', sig2);
+// 输出 Base64 格式
+const result = sm3.digest({ format: OutputFormat.BASE64 });
 ```
 
-### ZUC (序列密码 / LTE 算法)
+### ZUC (祖冲之序列密码)
+
+包含机密性算法（128-EEA3）与完整性算法（128-EIA3）。
 
 ```ts
-import {
-  zucEncrypt,
-  zucDecrypt,
-  zucKeystream,
-  eea3,
-  eia3,
-  ZUC,
-} from 'gmkitx';
+import { zucEncrypt, zucKeystream } from 'gmkitx';
 
-const key = '00112233445566778899aabbccddeeff';
-const iv = 'ffeeddccbbaa99887766554433221100';
+const key = '...';
+const iv = '...';
 
-// 函数式
-const c = zucEncrypt(key, iv, 'Hello, ZUC!');
-const p = zucDecrypt(key, iv, c);
+// 加密
+const cipher = zucEncrypt(key, iv, 'Hello ZUC');
 
-// 生成密钥流
-const ks = zucKeystream(key, iv, 4);
-
-// LTE EEA3 / EIA3
-const count = 0x12345678;
-const bearer = 5;
-const direction = 0;
-const len = 256;
-
-const eeaStream = eea3(key, count, bearer, direction, len);
-const mac = eia3(key, count, bearer, direction, 'msg');
-
-// 面向对象
-const zuc = new ZUC(key, iv);
-const enc = zuc.encrypt('Hello');
-const dec = zuc.decrypt(enc);
+// 生成密钥流 (Keystream)
+const stream = zucKeystream(key, iv, length);
 ```
 
 -----
 
-## ⚙️ 常量与类型
+## 🛠️ 工具箱 (Utils)
 
-```ts
-import {
-  CipherMode,
-  PaddingMode,
-  SM2CipherMode,
-  OutputFormat,
-  OID,
-  DEFAULT_USER_ID,
-} from 'gmkitx';
-```
+`gmkitx` 暴露了底层的数据处理函数，方便处理编码转换与 ASN.1 结构。
 
-* `CipherMode`：`ECB` | `CBC` | `CTR` | `CFB` | `OFB` | `GCM`
-* `PaddingMode`：`PKCS7` | `NONE` | `ZERO`
-* `SM2CipherMode`：`C1C3C2` (推荐) | `C1C2C3`
-* `OutputFormat`：`HEX` | `BASE64`
-* `OID`：常用国密相关 OID 常量（SM2 / SM3 / SM4 等）
-* `DEFAULT_USER_ID`：`'1234567812345678'`（SM2 签名默认 userId，兼容旧标准）
-
-类型导出示例：
-
-```ts
-import type {
-  KeyPair,
-  SignOptions,
-  VerifyOptions,
-  SM2CurveParams,
-  SM2KeyExchangeParams,
-  SM2KeyExchangeResult,
-  SM2EncryptOptions,
-  SM4Options,
-  SM4GCMResult,
-  ZUCOptions,
-  SHAOptions,
-} from 'gmkitx';
-```
+| 分类     | 函数                               | 说明               |
+|:-------|:---------------------------------|:-----------------|
+| **编码** | `hexToBytes`, `bytesToHex`       | Hex 字符串与字节数组互转   |
+| **编码** | `base64ToBytes`, `bytesToBase64` | Base64 与字节数组互转   |
+| **编码** | `stringToBytes`, `bytesToString` | UTF-8 字符串处理      |
+| **运算** | `xor`, `rotl`                    | 异或与循环左移          |
+| **格式** | `rawToDer`, `derToRaw`           | 签名的 RAW/DER 格式转换 |
 
 -----
-
-## 🧰 工具函数
-
-```ts
-import {
-  hexToBytes,
-  bytesToHex,
-  base64ToBytes,
-  bytesToBase64,
-  stringToBytes,
-  bytesToString,
-  normalizeInput,
-  xor,
-  rotl,
-  encodeSignature,
-  decodeSignature,
-  rawToDer,
-  derToRaw,
-  asn1ToXml,
-  signatureToXml,
-} from 'gmkitx';
-
-// 编解码
-const bytes = hexToBytes('48656c6c6f');
-const hex = bytesToHex(bytes);
-const b64 = bytesToBase64(bytes);
-const text = bytesToString(bytes);
-
-// ASN.1 / 签名处理
-const der = rawToDer('...rs...');
-const raw = derToRaw(der);
-```
-
------
-
-## 📁 项目结构 & 构建
-
-```bash
-# 安装依赖
-npm install
-
-# 运行单元测试
-npm test
-
-# 构建库
-npm run build
-
-# 类型检查
-npm run type-check
-```
-
-源码结构概览：
-
-```text
-src/
-├── crypto/
-│   ├── sm2/      # SM2 算法 + 类
-│   ├── sm3/      # SM3 算法 + 类
-│   ├── sm4/      # SM4 算法 + 类
-│   └── zuc/      # ZUC 算法 + 类
-├── crypto/sha/   # SHA 系列算法 + 类
-├── core/         # 工具函数 / ASN.1
-├── types/        # 常量与类型定义
-└── index.ts      # 库的统一出口
-```
-
------
-
-## 📄 许可证
-
-本项目基于 **Apache-2.0** 许可证开源。
-详见：[LICENSE](https://www.google.com/search?q=./LICENSE)
