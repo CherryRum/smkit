@@ -7,11 +7,17 @@
  * 使用 @noble/curves 进行高效的椭圆曲线运算
  */
 
-import { digest as sm3Digest } from '../sm3';
-import { normalizeInput, hexToBytes, bytesToHex, bytesToBase64, autoDecodeString } from '../../core/utils';
-import { SM2CipherMode, OutputFormat, type SM2CipherModeType, type OutputFormatType, DEFAULT_USER_ID } from '../../types/constants';
-import { sm2, SM2_CURVE_PARAMS } from './curve';
-import { encodeSignature, decodeSignature } from '../../core/asn1';
+import {digest as sm3Digest} from '../sm3';
+import {normalizeInput, hexToBytes, bytesToHex, bytesToBase64, autoDecodeString} from '../../core/utils';
+import {
+  SM2CipherMode,
+  OutputFormat,
+  type SM2CipherModeType,
+  type OutputFormatType,
+  DEFAULT_USER_ID
+} from '../../types/constants';
+import {sm2, SM2_CURVE_PARAMS} from './curve';
+import {encodeSignature, decodeSignature} from '../../core/asn1';
 
 /**
  * SM2 曲线参数接口（用于自定义曲线）
@@ -70,7 +76,7 @@ function isValidHexString(str: string): boolean {
     const isDigit = c >= 48 && c <= 57;  // 字符 0-9
     const isLowerHex = c >= 97 && c <= 102;  // 字符 a-f
     const isUpperHex = c >= 65 && c <= 70;  // 字符 A-F
-    
+
     if (!isDigit && !isLowerHex && !isUpperHex) {
       return false;
     }
@@ -165,6 +171,135 @@ function constantTimeEqual(a: Uint8Array, b: Uint8Array): boolean {
   }
 
   return result === 0;
+}
+
+
+/**
+ * 准备解密所需的中间值
+ * @param privateKey
+ * @param c1Point
+ * @param c2Length
+ */
+function prepareDecrypt(privateKey: string, c1Point: any, c2Length: number) {
+  const privateKeyBigInt = BigInt('0x' + privateKey);
+  const s = c1Point.multiply(privateKeyBigInt);
+  const sBytes = s.toBytes(false);
+
+  // 2. 获取 x2, y2
+  const x2 = sBytes.slice(1, 33);
+  const y2 = sBytes.slice(33, 65);
+
+  // 3. 计算密钥流 t (耗时操作)
+  const kdfInput = new Uint8Array(x2.length + y2.length);
+  kdfInput.set(x2, 0);
+  kdfInput.set(y2, x2.length);
+  const t = kdf(kdfInput, c2Length);
+
+  return {x2, y2, t};
+}
+
+function tryVerifyAndDecrypt(
+  x2: Uint8Array, y2: Uint8Array, t: Uint8Array,
+  c2: Uint8Array, c3: Uint8Array
+): string | null {
+  // 计算 M' = C2 ^ t
+  const plainBytes = new Uint8Array(c2.length);
+  for (let i = 0; i < c2.length; i++) {
+    plainBytes[i] = c2[i] ^ t[i];
+  }
+
+  // 计算 u = SM3(x2 || M' || y2)
+  const c3VerifyInput = new Uint8Array(x2.length + plainBytes.length + y2.length);
+  c3VerifyInput.set(x2, 0);
+  c3VerifyInput.set(plainBytes, x2.length);
+  c3VerifyInput.set(y2, x2.length + plainBytes.length);
+  const c3VerifyHex = sm3Digest(c3VerifyInput);
+  const c3Verify = hexToBytes(c3VerifyHex);
+  if (constantTimeEqual(c3, c3Verify)) {
+    return new TextDecoder().decode(plainBytes);
+  }
+  return null;
+}
+
+/**
+ * 使用 SM2 解密数据
+ *
+ * 支持自动识别密文格式：
+ * - 0x30 开头：ASN.1 格式
+ * - 0x04 开头：C1 为非压缩点格式（04 + x + y），默认 C1C3C2 模式
+ * - 0x02/0x03 开头：C1 为压缩点格式（02/03 + x），默认 C1C3C2 模式
+ *
+ * 注意：
+ * 1. 虽然可以穷举、尝试所有可能的密文格式，但这会影响解密性能。
+ * 2. 在与其他系统集成时，建议明确约定密文格式，做到知己知彼。
+ * 3. 本实现通过首字节自动检测格式（基于首字节只有固定几种可能的假设）：
+ *    - 0x30：ASN.1 格式
+ *    - 0x04：C1 为非压缩点格式，具体是 C1C3C2 还是 C1C2C3 取决于解密时的选项参数，默认为 C1C3C2
+ *    - 0x02/0x03：C1 为压缩点格式，具体是 C1C3C2 还是 C1C2C3 取决于解密时的选项参数，默认为 C1C3C2
+ *
+ * @param privateKey - 私钥（十六进制字符串）
+ * @param encryptedData - 加密的数据（十六进制字符串）
+ * @param mode - 密文模式：'C1C3C2'（默认）或 'C1C2C3'，可选参数，会尝试自动检测
+ * @returns 解密后的数据（UTF-8 字符串）
+ */
+export function decrypt(
+  privateKey: string,
+  encryptedData: string,
+  mode?: SM2CipherModeType
+): string {
+  const cleanPrivateKey = normalizePrivateKeyInput(privateKey);
+  const cipherBytes = autoDecodeString(encryptedData);
+
+  if (cipherBytes.length === 0) throw new Error('Invalid ciphertext: empty data');
+  if (cipherBytes[0] === 0x30) return decryptAsn1(cleanPrivateKey, cipherBytes);
+
+  // 解析 C1
+  let c1Length = 65;
+  const firstByte = cipherBytes[0];
+  if (firstByte === 0x02 || firstByte === 0x03) c1Length = 33;
+  else if (firstByte !== 0x04) throw new Error('Invalid ciphertext: unsupported format');
+
+  const c3Length = 32;
+  if (cipherBytes.length < c1Length + c3Length) throw new Error('Invalid ciphertext: too short');
+
+  const c1Bytes = cipherBytes.slice(0, c1Length);
+  const c1Point = sm2.Point.fromHex(bytesToHex(c1Bytes));
+  const c2Length = cipherBytes.length - c1Length - c3Length;
+  const {x2, y2, t} = prepareDecrypt(cleanPrivateKey, c1Point, c2Length);
+  // 定义提取辅助函数
+  const getComponents = (m: SM2CipherModeType) => {
+    if (m === SM2CipherMode.C1C2C3) {
+      return {
+        c2: cipherBytes.slice(c1Length, c1Length + c2Length),
+        c3: cipherBytes.slice(c1Length + c2Length)
+      };
+    } else { // C1C3C2
+      return {
+        c3: cipherBytes.slice(c1Length, c1Length + c3Length),
+        c2: cipherBytes.slice(c1Length + c3Length)
+      };
+    }
+  };
+
+  // 1. 指定模式：直接尝试
+  if (mode) {
+    const {c2, c3} = getComponents(mode);
+    const result = tryVerifyAndDecrypt(x2, y2, t, c2, c3);
+    if (result !== null) return result;
+    throw new Error('Decryption failed: C3 verification failed');
+  }
+
+  // 2. 自动模式：先试 C1C3C2 (推荐)，失败再试 C1C2C3
+  // 复用 x2, y2, t，零额外开销
+  const v1 = getComponents(SM2CipherMode.C1C3C2);
+  const res1 = tryVerifyAndDecrypt(x2, y2, t, v1.c2, v1.c3);
+  if (res1 !== null) return res1;
+
+  const v2 = getComponents(SM2CipherMode.C1C2C3);
+  const res2 = tryVerifyAndDecrypt(x2, y2, t, v2.c2, v2.c3);
+  if (res2 !== null) return res2;
+
+  throw new Error('Decryption failed: unable to decrypt with C1C3C2 or C1C2C3 mode');
 }
 
 /**
@@ -275,9 +410,7 @@ function decryptAsn1(privateKey: string, cipherBytes: Uint8Array): string {
   } else {
     throw new Error('Invalid ASN.1 ciphertext: y coordinate too long');
   }
-
   const c1Point = sm2.Point.fromHex(bytesToHex(c1Bytes));
-
   return decryptCore(privateKey, c1Point, c2, c3);
 }
 
@@ -357,17 +490,24 @@ function computeZ(userId: string, publicKey: string): Uint8Array {
 
   // 连接所有部分
   const totalLength = entl.length + userIdBytes.length + a.length + b.length +
-                      xG.length + yG.length + x.length + y.length;
+    xG.length + yG.length + x.length + y.length;
   const data = new Uint8Array(totalLength);
   let offset = 0;
 
-  data.set(entl, offset); offset += entl.length;
-  data.set(userIdBytes, offset); offset += userIdBytes.length;
-  data.set(a, offset); offset += a.length;
-  data.set(b, offset); offset += b.length;
-  data.set(xG, offset); offset += xG.length;
-  data.set(yG, offset); offset += yG.length;
-  data.set(x, offset); offset += x.length;
+  data.set(entl, offset);
+  offset += entl.length;
+  data.set(userIdBytes, offset);
+  offset += userIdBytes.length;
+  data.set(a, offset);
+  offset += a.length;
+  data.set(b, offset);
+  offset += b.length;
+  data.set(xG, offset);
+  offset += xG.length;
+  data.set(yG, offset);
+  offset += yG.length;
+  data.set(x, offset);
+  offset += x.length;
   data.set(y, offset);
 
   // sm3Digest 返回 hex 字符串，需要转换为 Uint8Array
@@ -775,112 +915,6 @@ export function encrypt(
   return outputFormat === OutputFormat.BASE64 ? bytesToBase64(ciphertext) : bytesToHex(ciphertext);
 }
 
-/**
- * 使用 SM2 解密数据
- *
- * 支持自动识别密文格式：
- * - 0x30 开头：ASN.1 格式
- * - 0x04 开头：C1 为非压缩点格式（04 + x + y），默认 C1C3C2 模式
- * - 0x02/0x03 开头：C1 为压缩点格式（02/03 + x），默认 C1C3C2 模式
- *
- * 注意：
- * 1. 虽然可以穷举、尝试所有可能的密文格式，但这会影响解密性能。
- * 2. 在与其他系统集成时，建议明确约定密文格式，做到知己知彼。
- * 3. 本实现通过首字节自动检测格式（基于首字节只有固定几种可能的假设）：
- *    - 0x30：ASN.1 格式
- *    - 0x04：C1 为非压缩点格式，具体是 C1C3C2 还是 C1C2C3 取决于解密时的选项参数，默认为 C1C3C2
- *    - 0x02/0x03：C1 为压缩点格式，具体是 C1C3C2 还是 C1C2C3 取决于解密时的选项参数，默认为 C1C3C2
- *
- * @param privateKey - 私钥（十六进制字符串）
- * @param encryptedData - 加密的数据（十六进制字符串）
- * @param mode - 密文模式：'C1C3C2'（默认）或 'C1C2C3'，可选参数，会尝试自动检测
- * @returns 解密后的数据（UTF-8 字符串）
- */
-export function decrypt(
-  privateKey: string,
-  encryptedData: string,
-  mode?: SM2CipherModeType
-): string {
-  // 自动识别并规范化私钥输入
-  const cleanPrivateKey = normalizePrivateKeyInput(privateKey);
-
-  // 自动检测输入格式（hex 或 base64）并解码
-  const cipherBytes = autoDecodeString(encryptedData);
-
-  if (cipherBytes.length === 0) {
-    throw new Error('Invalid ciphertext: empty data');
-  }
-
-  // 根据首字节自动检测格式
-  const firstByte = cipherBytes[0];
-
-  // ASN.1 格式检测
-  if (firstByte === 0x30) {
-    return decryptAsn1(cleanPrivateKey, cipherBytes);
-  }
-
-  // 确定 C1 点的格式和长度
-  let c1Length: number;
-  let c1Bytes: Uint8Array;
-
-  if (firstByte === 0x04) {
-    // 非压缩点格式：04 + x(32) + y(32) = 65 字节
-    c1Length = 65;
-  } else if (firstByte === 0x02 || firstByte === 0x03) {
-    // 压缩点格式：02/03 + x(32) = 33 字节
-    c1Length = 33;
-  } else {
-    throw new Error(`Invalid ciphertext: unsupported format (first byte: 0x${firstByte.toString(16).padStart(2, '0')})`);
-  }
-
-  const c3Length = 32; // SM3 哈希长度
-
-  if (cipherBytes.length < c1Length + c3Length) {
-    throw new Error('Invalid ciphertext: too short');
-  }
-
-  // 提取 C1
-  c1Bytes = cipherBytes.slice(0, c1Length);
-  const c1Point = sm2.Point.fromHex(bytesToHex(c1Bytes));
-
-  // 根据模式提取 C2 和 C3
-  // 如果没有指定模式，尝试 C1C3C2（默认），失败则自动尝试 C1C2C3
-  let c2: Uint8Array;
-  let c3: Uint8Array;
-
-  if (mode) {
-    // 明确指定了模式
-    if (mode === SM2CipherMode.C1C2C3) {
-      c2 = cipherBytes.slice(c1Length, cipherBytes.length - c3Length);
-      c3 = cipherBytes.slice(cipherBytes.length - c3Length);
-    } else {
-      c3 = cipherBytes.slice(c1Length, c1Length + c3Length);
-      c2 = cipherBytes.slice(c1Length + c3Length);
-    }
-
-    return decryptCore(cleanPrivateKey, c1Point, c2, c3);
-  } else {
-    // 未指定模式，尝试 C1C3C2，失败则尝试 C1C2C3
-    // 先尝试 C1C3C2（默认模式）
-    c3 = cipherBytes.slice(c1Length, c1Length + c3Length);
-    c2 = cipherBytes.slice(c1Length + c3Length);
-
-    try {
-      return decryptCore(cleanPrivateKey, c1Point, c2, c3);
-    } catch (error) {
-      // C1C3C2 失败，尝试 C1C2C3
-      c2 = cipherBytes.slice(c1Length, cipherBytes.length - c3Length);
-      c3 = cipherBytes.slice(cipherBytes.length - c3Length);
-
-      try {
-        return decryptCore(cleanPrivateKey, c1Point, c2, c3);
-      } catch (error2) {
-        // 两种模式都失败，抛出原始错误
-        throw new Error('Decryption failed: unable to decrypt with C1C3C2 or C1C2C3 mode');
-      }
-    }
-  }
-}
 
 /**
  * 使用 SM2 签名数据
@@ -928,7 +962,7 @@ export function sign(
   }
 
   // prehash: false 因为我们已经计算了 SM3 哈希
-  const signatureBytes = sm2.sign(e, privateKeyBytes, { prehash: false });
+  const signatureBytes = sm2.sign(e, privateKeyBytes, {prehash: false});
 
   // 解析签名（compact 格式：r || s，各32字节）
   const r = bytesToHex(signatureBytes.slice(0, 32));
@@ -1022,7 +1056,7 @@ export function verify(
     signatureBytes.set(sBytes, 32);
 
     // prehash: false 因为我们已经计算了 SM3 哈希
-    return sm2.verify(signatureBytes, e, publicKeyBytes, { prehash: false });
+    return sm2.verify(signatureBytes, e, publicKeyBytes, {prehash: false});
   } catch (error) {
     // 验证失败
     return false;
@@ -1288,12 +1322,18 @@ export function keyExchange(params: SM2KeyExchangeParams): SM2KeyExchangeResult 
     xv.length + selfZ.length + peerZ.length + xSelf.length + ySelf.length + xPeer.length + yPeer.length
   );
   let offset = 0;
-  innerHashInput.set(xv, offset); offset += xv.length;
-  innerHashInput.set(selfZ, offset); offset += selfZ.length;
-  innerHashInput.set(peerZ, offset); offset += peerZ.length;
-  innerHashInput.set(xSelf, offset); offset += xSelf.length;
-  innerHashInput.set(ySelf, offset); offset += ySelf.length;
-  innerHashInput.set(xPeer, offset); offset += xPeer.length;
+  innerHashInput.set(xv, offset);
+  offset += xv.length;
+  innerHashInput.set(selfZ, offset);
+  offset += selfZ.length;
+  innerHashInput.set(peerZ, offset);
+  offset += peerZ.length;
+  innerHashInput.set(xSelf, offset);
+  offset += xSelf.length;
+  innerHashInput.set(ySelf, offset);
+  offset += ySelf.length;
+  innerHashInput.set(xPeer, offset);
+  offset += xPeer.length;
   innerHashInput.set(yPeer, offset);
 
   const innerHash = sm3Digest(innerHashInput);
