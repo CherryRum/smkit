@@ -91,9 +91,12 @@ demo-vue/dist
 
 # vuepress build output
 .vuepress/dist
+docs/.vuepress/dist
 
 # vuepress v2.x temp and cache directory
 .temp
+docs/.vuepress/.temp
+docs/.vuepress/.cache
 
 # Sveltekit cache directory
 .svelte-kit/

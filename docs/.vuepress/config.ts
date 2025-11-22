@@ -16,9 +16,6 @@ export default defineUserConfig({
   theme: hopeTheme({
     hostname: 'https://cherryrum.github.io/gmkit',
     
-    // 网站图标
-    logo: '/logo.svg',
-    
     // 仓库配置
     repo: 'CherryRum/gmkit',
     repoLabel: 'GitHub',
@@ -69,8 +66,6 @@ export default defineUserConfig({
           text: '快速开始',
           children: [
             '/guide/getting-started',
-            '/guide/installation',
-            '/guide/quick-start',
           ],
         },
       ],
@@ -136,44 +131,6 @@ export default defineUserConfig({
     
     // 插件配置
     plugins: {
-      // Markdown 增强
-      mdEnhance: {
-        // 启用代码块
-        codetabs: true,
-        // 启用任务列表
-        tasklist: true,
-        // 启用图表
-        mermaid: true,
-        // 启用数学公式
-        katex: true,
-        // 启用代码演示
-        demo: true,
-        // 启用标记
-        mark: true,
-        // 启用对齐
-        align: true,
-        // 启用属性
-        attrs: true,
-        // 启用下标
-        sub: true,
-        // 启用上标
-        sup: true,
-        // 启用脚注
-        footnote: true,
-        // 启用图片标记
-        figure: true,
-        // 启用图片懒加载
-        imgLazyload: true,
-        // 启用图片标记
-        imgMark: true,
-        // 启用图片大小
-        imgSize: true,
-        // 启用选项卡
-        tabs: true,
-        // 启用提示容器
-        hint: true,
-      },
-      
       // 代码复制
       copyCode: {
         showInMobile: true,
@@ -193,11 +150,29 @@ export default defineUserConfig({
       readingTime: {
         wordPerMinute: 200,
       },
-      
-      // 搜索
-      searchPro: {
-        indexContent: true,
+    },
+    
+    // Markdown 配置 (使用新的 API)
+    markdown: {
+      codeTabs: true,
+      tasklist: true,
+      mermaid: true,
+      math: {
+        type: 'katex',
       },
+      demo: true,
+      mark: true,
+      align: true,
+      attrs: true,
+      sub: true,
+      sup: true,
+      footnote: true,
+      figure: true,
+      imgLazyload: true,
+      imgMark: true,
+      imgSize: true,
+      tabs: true,
+      hint: true,
     },
     
     // 页脚
