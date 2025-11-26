@@ -143,7 +143,10 @@ function tau(a: number): number {
 - ✅ **CFB** (Cipher Feedback) - 密文反馈模式
 - ✅ **OFB** (Output Feedback) - 输出反馈模式
 
-## Cipher Modes Not Yet Implemented 尚未实现的密码模式
+### Authenticated / AEAD Mode 认证模式
+- ✅ **GCM** (Galois/Counter Mode) - 认证加密，需 12 字节 IV 和标签
+
+## Authenticated & Advanced Cipher Modes 状态
 
 ### 1. GCM (Galois/Counter Mode)
 **Status 状态: ✅ Implemented 已实现**
@@ -271,14 +274,14 @@ Actual performance will vary based on:
 
 ## Future Work 未来工作
 
-1. Implement GCM mode for authenticated encryption
-   实现GCM模式用于认证加密
-2. Add performance benchmarking suite
-   添加性能基准测试套件
+1. Add performance benchmarking suite and publish baselines
+   添加并发布性能基准测试套件
+2. Extend cipher mode coverage (XTS/CCM/HCTR/OFBNLF) with test vectors
+   补充更多密码模式支持（XTS/CCM/HCTR/OFBNLF）并完善测试向量
 3. Consider WebAssembly implementation for critical paths
    考虑为关键路径实现WebAssembly
-4. Optimize for specific JavaScript engines
-   针对特定JavaScript引擎优化
+4. Optimize for specific JavaScript engines and worker/thread usage
+   针对特定JavaScript引擎与 Worker/线程场景优化
 
 ## References 参考
 
