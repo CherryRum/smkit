@@ -47,7 +47,7 @@ jobs:
           remote_path: /home/gmkit-site/www/
           remote_user: ${{ secrets.USER }}
           remote_host: ${{ secrets.HK_HOST }}
-          remote_password: ${{ secrets.HK_PASS }}
+          remote_key:  ${{ secrets.SSH_KEY }}
 
       - name: Deploy to CN (Mirror Origin)
         if: github.event_name == 'push'
@@ -58,7 +58,7 @@ jobs:
           remote_path: /home/gmkit-site/www/
           remote_user: ${{ secrets.USER }}
           remote_host: ${{ secrets.CN_HOST }}
-          remote_password: ${{ secrets.CN_PASS }}
+          remote_key:  ${{ secrets.SSH_KEY }}
 
 #      - name: Purge EdgeOne CDN Cache
 #        if: github.event_name == 'push'
