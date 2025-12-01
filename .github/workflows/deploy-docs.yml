@@ -24,11 +24,15 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Install Dependencies
-        run: npm ci
+      # 这里改成在 docs 目录里执行 npm ci
+      - name: Install Dependencies (docs package)
+        working-directory: ./docs
+        run: npm i
 
+      # 同样在 docs 目录里执行构建命令
       - name: Build VuePress
-        run: npm run docs:build
+        working-directory: ./docs
+        run: npm run build
 
       # ------------------------------------------------------------
       # 使用 rsync --delete：最佳实践（不会中间断造成空站）
@@ -56,10 +60,10 @@ jobs:
           remote_host: ${{ secrets.CN_HOST }}
           remote_key: ${{ secrets.CN_KEY }}
 
-      - name: Purge EdgeOne CDN Cache
-        if: github.event_name == 'push'
-        run: |
-          echo "Purging cache..."
-          curl -X POST "https://api.edgeone.com/purge?zone=${{ secrets.EDGE_ZONE }}" \
-            -H "Authorization: Bearer ${{ secrets.EDGE_TOKEN }}" \
-            --fail || echo "Purge failed or API not supported"
+#      - name: Purge EdgeOne CDN Cache
+#        if: github.event_name == 'push'
+#        run: |
+#          echo "Purging cache..."
+#          curl -X POST "https://api.edgeone.com/purge?zone=${{ secrets.EDGE_ZONE }}" \
+#            -H "Authorization: Bearer ${{ secrets.EDGE_TOKEN }}" \
+#            --fail || echo "Purge failed or API not supported"
