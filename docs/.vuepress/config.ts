@@ -4,6 +4,17 @@ import { viteBundler } from '@vuepress/bundler-vite';
 import { compression, defineAlgorithm } from 'vite-plugin-compression2';
 import { constants } from 'zlib';
 
+const hiddenContributors = new Set(['Copilot', 'copilot-swe-agent[bot]']);
+
+const contributorInfo = [
+  {
+    username: 'yulin',
+    name: 'mumu',
+    alias: ['mumu', 'linyuliu', 'yulin'],
+    emailAlias: ['yulin.1996@foxmail.com'],
+  },
+];
+
 export default defineUserConfig({
   lang: 'zh-CN',
   title: 'gmkitx',
@@ -169,7 +180,19 @@ export default defineUserConfig({
 
     plugins: {
       copyCode: { showInMobile: true },
-      git: true,
+      git: {
+        contributors: {
+          info: contributorInfo,
+          transform: (contributors) =>
+            contributors
+              .filter(
+                ({ name, username }) =>
+                  !hiddenContributors.has(name) && !hiddenContributors.has(username),
+              )
+              .sort((a, b) => b.commits - a.commits)
+              .slice(0, 2),
+        },
+      },
       readingTime: { wordPerMinute: 200 },
       copyright: false,
     },

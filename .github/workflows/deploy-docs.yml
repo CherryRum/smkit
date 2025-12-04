@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # keep full history so VuePress git plugin shows per-file contributors/last-updated
 
       - name: Setup Node
         uses: actions/setup-node@v4
