@@ -1,0 +1,155 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "encoding": "hex",
+    "note": "Deterministic outputs only; SM2 entries validate by decrypt/verify, not ciphertext literal."
+  },
+  "defaults": {
+    "sm4KeyHex": "0123456789abcdeffedcba9876543210",
+    "sm4IvHex": "000102030405060708090a0b0c0d0e0f",
+    "sm2PublicKeyHex": "045647ebf2adcaf54f8102bea9a7ca8905794a3f2f29622593269bb55d72e0a140dc81f3dce73bb609f8a056640db0e04c08e0bd8be79140702bbdb0206e95b7ac",
+    "sm2PrivateKeyHex": "228049e009de869baf9aba74f8f8c52e09cde1b52cafb0df7ab154ba4593743e"
+  },
+  "cases": [
+    {
+      "id": "sm3-hello",
+      "algo": "SM3",
+      "op": "digest",
+      "input": "Hello GMKit",
+      "expected": {
+        "hex": "c90b8d11a6f41032c0412df97267a772f987ab4b4a0bcad9a4025f0be27bbe2c"
+      }
+    },
+    {
+      "id": "sm3-zh",
+      "algo": "SM3",
+      "op": "digest",
+      "input": "坏事到我为止，好事从此开始",
+      "expected": {
+        "hex": "a05f4738cc49c81a8feb03c9b5e9fe44845e48871af79e0e7c4fdd378f80e071"
+      }
+    },
+    {
+      "id": "sm3-emoji",
+      "algo": "SM3",
+      "op": "digest",
+      "input": "可爱的小熊 🧸",
+      "expected": {
+        "hex": "b703ad6573c7271325a23624f28562fd9609bdadb7d66dffaa69dbb32ea140b8"
+      }
+    },
+    {
+      "id": "sm4-ecb-hello",
+      "algo": "SM4",
+      "op": "encrypt",
+      "mode": "ECB",
+      "padding": "PKCS7",
+      "keyHex": "0123456789abcdeffedcba9876543210",
+      "input": "Hello GMKit",
+      "expected": {
+        "cipherHex": "aeb1def8fec181b3d0ab347d7d04e2bb"
+      }
+    },
+    {
+      "id": "sm4-ecb-zh",
+      "algo": "SM4",
+      "op": "encrypt",
+      "mode": "ECB",
+      "padding": "PKCS7",
+      "keyHex": "0123456789abcdeffedcba9876543210",
+      "input": "坏事到我为止，好事从此开始",
+      "expected": {
+        "cipherHex": "1ac3db7282c7a0c34feec8d2e5f120f1a90ac320650f93658f0b282e8ec2ef77778abc9a43c676731007aa791de7c296"
+      }
+    },
+    {
+      "id": "sm4-ecb-emoji",
+      "algo": "SM4",
+      "op": "encrypt",
+      "mode": "ECB",
+      "padding": "PKCS7",
+      "keyHex": "0123456789abcdeffedcba9876543210",
+      "input": "可爱的小熊 🧸",
+      "expected": {
+        "cipherHex": "035adea04123fb14c67a61f056bc6c997998ad78e14e3460da8e35f73dc2c407"
+      }
+    },
+    {
+      "id": "sm4-cbc-hello",
+      "algo": "SM4",
+      "op": "encrypt",
+      "mode": "CBC",
+      "padding": "PKCS7",
+      "keyHex": "0123456789abcdeffedcba9876543210",
+      "ivHex": "000102030405060708090a0b0c0d0e0f",
+      "input": "Hello GMKit",
+      "expected": {
+        "cipherHex": "2389287c90cabd1ab3bf6b89159d6779"
+      }
+    },
+    {
+      "id": "sm4-cbc-zh",
+      "algo": "SM4",
+      "op": "encrypt",
+      "mode": "CBC",
+      "padding": "PKCS7",
+      "keyHex": "0123456789abcdeffedcba9876543210",
+      "ivHex": "000102030405060708090a0b0c0d0e0f",
+      "input": "坏事到我为止，好事从此开始",
+      "expected": {
+        "cipherHex": "00f08407706413eae4e93329bb02cd2d7b4dd1ebccfc75d4d5861176b9d44958efaf31326d590eb0901e1a7a7feddd83"
+      }
+    },
+    {
+      "id": "sm4-cbc-emoji",
+      "algo": "SM4",
+      "op": "encrypt",
+      "mode": "CBC",
+      "padding": "PKCS7",
+      "keyHex": "0123456789abcdeffedcba9876543210",
+      "ivHex": "000102030405060708090a0b0c0d0e0f",
+      "input": "可爱的小熊 🧸",
+      "expected": {
+        "cipherHex": "ffd57580bfbb72304e0ffd6b777fb008b00640a24493e457c9278822b5c8d51c"
+      }
+    },
+    {
+      "id": "sm2-c1c3c2-zh",
+      "algo": "SM2",
+      "op": "encrypt",
+      "mode": "C1C3C2",
+      "publicKeyHex": "045647ebf2adcaf54f8102bea9a7ca8905794a3f2f29622593269bb55d72e0a140dc81f3dce73bb609f8a056640db0e04c08e0bd8be79140702bbdb0206e95b7ac",
+      "privateKeyHex": "228049e009de869baf9aba74f8f8c52e09cde1b52cafb0df7ab154ba4593743e",
+      "input": "坏事到我为止，好事从此开始",
+      "expected": {
+        "plain": "坏事到我为止，好事从此开始",
+        "note": "Ciphertext is nondeterministic; compare by decrypt result."
+      }
+    },
+    {
+      "id": "sm2-c1c2c3-emoji",
+      "algo": "SM2",
+      "op": "encrypt",
+      "mode": "C1C2C3",
+      "publicKeyHex": "045647ebf2adcaf54f8102bea9a7ca8905794a3f2f29622593269bb55d72e0a140dc81f3dce73bb609f8a056640db0e04c08e0bd8be79140702bbdb0206e95b7ac",
+      "privateKeyHex": "228049e009de869baf9aba74f8f8c52e09cde1b52cafb0df7ab154ba4593743e",
+      "input": "可爱的小熊 🧸",
+      "expected": {
+        "plain": "可爱的小熊 🧸",
+        "note": "Ciphertext is nondeterministic; compare by decrypt result."
+      }
+    },
+    {
+      "id": "sm2-sign-hello",
+      "algo": "SM2",
+      "op": "sign",
+      "publicKeyHex": "045647ebf2adcaf54f8102bea9a7ca8905794a3f2f29622593269bb55d72e0a140dc81f3dce73bb609f8a056640db0e04c08e0bd8be79140702bbdb0206e95b7ac",
+      "privateKeyHex": "228049e009de869baf9aba74f8f8c52e09cde1b52cafb0df7ab154ba4593743e",
+      "input": "Hello GMKit",
+      "expected": {
+        "verify": true,
+        "note": "Signature is nondeterministic; validate via verify=true."
+      }
+    }
+  ]
+}

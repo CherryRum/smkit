@@ -133,16 +133,16 @@ export default defineUserConfig({
         },
       ],
       '/dev/': [
-        {
-          text: '开发指南',
-          children: [
-            '/dev/ARCHITECTURE.zh-CN',
-            '/dev/IMPORT_GUIDE',
-            '/dev/HUTOOL-INTEGRATION.zh-CN',
-            '/dev/INTERNATIONAL-ALGORITHMS.zh-CN',
-            '/dev/PUBLISHING',
-          ],
-        },
+      {
+        text: '开发指南',
+        children: [
+          '/dev/ARCHITECTURE.zh-CN',
+          '/dev/IMPORT_GUIDE',
+          '/dev/JAVA-INTEGRATION.zh-CN',
+          '/dev/INTERNATIONAL-ALGORITHMS.zh-CN',
+          '/dev/PUBLISHING',
+        ],
+      },
       ],
       '/standards/': [
         {
