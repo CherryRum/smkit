@@ -102,15 +102,6 @@ export default defineUserConfig({
           { text: '性能优化', link: '/performance/PERFORMANCE-OPTIMIZATIONS' },
         ],
       },
-      {
-        text: '技术总结',
-        children: [
-          { text: '项目总结', link: '/summaries/PROJECT_SUMMARY' },
-          { text: '实现总结', link: '/summaries/IMPLEMENTATION_SUMMARY' },
-          { text: '迁移总结', link: '/summaries/STANDARD-MIGRATION-SUMMARY' },
-          { text: '安全总结', link: '/summaries/SECURITY-SUMMARY' },
-        ],
-      },
     ],
 
     sidebar: {
@@ -163,17 +154,6 @@ export default defineUserConfig({
         {
           text: '性能',
           children: ['/performance/PERFORMANCE', '/performance/PERFORMANCE-OPTIMIZATIONS'],
-        },
-      ],
-      '/summaries/': [
-        {
-          text: '技术总结',
-          children: [
-            '/summaries/PROJECT_SUMMARY',
-            '/summaries/IMPLEMENTATION_SUMMARY',
-            '/summaries/STANDARD-MIGRATION-SUMMARY',
-            '/summaries/SECURITY-SUMMARY',
-          ],
         },
       ],
     },

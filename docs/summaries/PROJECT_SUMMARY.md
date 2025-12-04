@@ -14,189 +14,25 @@ tag:
 
 # GMKit Project Summary
 
-## Overview
-GMKit is a pure TypeScript implementation of Chinese national cryptographic algorithms (SM2, SM3, SM4) following modern JavaScript/TypeScript best practices.
+> 本页收敛成可用的状态说明，避免夸大：以当前仓库为准，后续变更再补充。
 
-## Implementation Status
+## 当前范围
+- 算法：SM2（基于 @noble/curves）、SM3、SM4、ZUC、SHA 家族。
+- 工具：输入/输出格式转换、随机数获取（含安全源优先的回退策略）。
+- 入口：`src/index.ts` 提供按需函数与类导出，保持 tree-shaking 友好。
 
-### ✅ Completed
+## 当前状态
+- 构建：使用 tsup 输出 ESM/CJS/UMD 与类型定义（见 `dist/`），面向 Node 和浏览器。
+- 依赖：仅运行时依赖 @noble/curves/@noble/hashes；其余为开发工具链。
+- 测试与类型：Vitest 用例覆盖核心路径；TypeScript `--noEmit` 校验常态化。
+- SM2：签名/验签、加解密基于标准曲线参数；仍需更多标准向量与互操作验证。
+- 文档与示例：VuePress 文档、Vue demo 在仓库内，可本地 `npm run docs:dev`/`demo:vue`。
 
-#### 1. Project Infrastructure
-- **Package Configuration**: Full ESM/CJS dual module support
-  - ESM output: `dist/gmkit.js`
-  - CJS output: `dist/gmkit.cjs`
-  - TypeScript definitions: `dist/index.d.ts`
-- **Build System**: Vite with TypeScript plugin
-- **Testing**: Vitest with 40 passing tests across 4 test suites
-- **Type Safety**: Strict TypeScript configuration with full type checking
-- **CI/CD**: GitHub Actions workflow for automated testing
-
-#### 2. SM3 Hash Algorithm ✅ FULLY FUNCTIONAL
-- **Implementation**: Complete and verified
-- **Features**:
-  - `digest(data)`: Hash computation
-  - `hmac(key, data)`: HMAC-SM3 authentication
-- **Validation**: Matches official test vectors
-  - Empty string: `1ab21d8355cfa17f8e61194831e81a8f22bec8c728fefb747ed035eb5082aa2b`
-  - "abc": `66c7f0f462eeedd9d1f2d46bdc10e4e24167c4875cf2f7a2297da02b8f4ba8e0`
-- **Tests**: 8 test cases, all passing
-
-#### 3. SM4 Block Cipher ✅ FULLY FUNCTIONAL
-- **Implementation**: Complete with proper S-box, key expansion, and cipher operations
-- **Features**:
-  - ECB and CBC modes
-  - PKCS7 padding
-  - `sm4Encrypt(key, data, options)`: Encryption
-  - `sm4Decrypt(key, encryptedData, options)`: Decryption
-- **Key Size**: 128-bit (16 bytes / 32 hex chars)
-- **Block Size**: 128-bit (16 bytes)
-- **Tests**: 8 test cases covering both modes, all passing
-
-#### 4. SM2 Elliptic Curve Cryptography ⚠️ PLACEHOLDER
-- **Status**: Placeholder implementation
-- **Functions Available**:
-  - `generateKeyPair()`: Generates random keys (not cryptographically secure)
-  - `getPublicKeyFromPrivateKey(privateKey)`: Mock derivation
-  - `sm2Encrypt(publicKey, data, mode)`: Mock encryption
-  - `sm2Decrypt(privateKey, encryptedData, mode)`: Mock decryption
-  - `sign(privateKey, data, options)`: Mock signature
-  - `verify(publicKey, data, signature, options)`: Mock verification
-- **Note**: Full implementation requires proper elliptic curve operations (NIST P-256 curve with Chinese parameters)
-- **Tests**: 10 test cases for API structure, all passing
-
-#### 5. Utility Functions ✅ FULLY FUNCTIONAL
-- **Conversion Functions**:
-  - `hexToBytes(hex)`: Hex string to Uint8Array
-  - `bytesToHex(bytes)`: Uint8Array to lowercase hex
-  - `stringToBytes(str)`: UTF-8 string to Uint8Array
-  - `bytesToString(bytes)`: Uint8Array to UTF-8 string
-  - `normalizeInput(data)`: Unified input handling
-- **Cryptographic Utilities**:
-  - `xor(a, b)`: XOR two arrays
-  - `rotl(value, shift)`: 32-bit left rotation
-  - `bytes4ToUint32BE(bytes, offset)`: 4-byte to uint32 conversion
-  - `uint32ToBytes4BE(value)`: uint32 to 4-byte conversion
-- **Tests**: 14 test cases, all passing
-
-## Architecture Principles
-
-### 1. Purity (纯粹性)
-- ✅ Zero runtime dependencies
-- ✅ Pure TypeScript implementation
-- ✅ All algorithms self-contained
-- ✅ No external crypto libraries
-
-### 2. Performance (性能)
-- ✅ Internal processing uses `Uint8Array`
-- ✅ Efficient bit operations
-- ✅ Optimized algorithms based on standards
-- ✅ Tree-shakable exports for minimal bundle size
-
-### 3. Modern (现代化)
-- ✅ TypeScript with strict type checking
-- ✅ ES Modules primary, CommonJS compatible
-- ✅ First-class type definitions
-- ✅ Modern tooling (Vite, Vitest)
-
-### 4. Isomorphic (同构性)
-- ✅ Works in Node.js
-- ✅ Works in modern browsers
-- ✅ No platform-specific dependencies
-- ✅ Unified codebase
-
-## API Design
-
-### Functional Approach
-All functions are pure and stateless:
-```typescript
-// Direct imports
-import { digest, sm4Encrypt, generateKeyPair } from 'gmkitx';
-
-// Namespace imports
-import { SM3, SM4, SM2 } from 'gmkitx';
-SM3.digest('data');
-SM4.encrypt(key, data);
-SM2.generateKeyPair();
-```
-
-### Data Format Conventions
-- **Internal**: All binary data uses `Uint8Array`
-- **Input**: Accepts `string` (UTF-8) or `Uint8Array`
-- **Output**: Binary outputs as **lowercase hex strings**
-- **Keys**: All keys as **hex strings**
-
-## Test Coverage
-
-| Module | Tests | Status |
-|--------|-------|--------|
-| Utils  | 14    | ✅ All passing |
-| SM3    | 8     | ✅ All passing |
-| SM4    | 8     | ✅ All passing |
-| SM2    | 10    | ✅ All passing (API structure) |
-| **Total** | **40** | **✅ 100%** |
-
-## Build Output
-
-```
-dist/
-├── index.d.ts      (6.2 KB)  - TypeScript definitions
-├── gmkit.js        (11 KB)   - ES Module
-├── gmkit.js.map    (35 KB)   - ESM source map
-├── gmkit.cjs       (8 KB)    - CommonJS
-└── gmkit.cjs.map   (33 KB)   - CJS source map
-```
-
-Gzipped sizes:
-- ESM: 3.57 KB
-- CJS: 3.22 KB
-
-## Future Enhancements
-
-### Priority 1: Complete SM2 Implementation
-- Implement proper elliptic curve operations
-- Use secp256k1 curve with SM2 parameters
-- Implement ECDH key exchange
-- Proper signature generation (r, s)
-- DER encoding support
-- User ID handling for signatures
-
-### Priority 2: Performance Optimizations
-- WebAssembly acceleration for hot paths
-- Worker thread support for parallel processing
-- Benchmark suite
-
-### Priority 3: Additional Features
-- Stream processing for large data
-- More cipher modes (CTR, GCM)
-- Key derivation functions
-- Certificate handling
-
-### Priority 4: Testing
-- Integration with test vectors repository
-- Cross-platform validation
-- Interoperability tests with other implementations
-- Fuzzing
-
-## Development Commands
-
-```bash
-# Install dependencies
-npm install
-
-# Run tests
-npm test
-
-# Watch mode for tests
-npm run test:watch
-
-# Type check
-npm run type-check
-
-# Build for production
-npm run build
-```
-
-## Repository Structure
+## 风险与待办
+- 安全：尚未做第三方审计；生产前请在目标环境复核随机源与关键路径实现。
+- 兼容：老版本用户 ID（SM2）与新标准的差异需按业务选择，建议自测。
+- 测试：补充 SM2/ZUC 互操作与性能基准；覆盖更多异常路径与边界值。
+- 文档：精简仍需的教程，删除过时信息，保持与代码同步。
 
 ```
 gmkit/
