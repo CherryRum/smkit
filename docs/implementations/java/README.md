@@ -353,10 +353,6 @@ GMKitX 团队正在考虑提供官方的 Java 实现，将具备以下特性：
 - ✅ 完整的单元测试
 - ✅ 与前端版本互操作性测试
 
-**时间表：** 待定
-
-**反馈：** 如果您需要 Java 版本，请在 [GitHub Issues](https://github.com/CherryRum/gmkit/issues) 告诉我们！
-
 ---
 
 ## 🔗 相关资源

@@ -156,11 +156,23 @@ export default defineUserConfig({
           children: ['/performance/PERFORMANCE', '/performance/PERFORMANCE-OPTIMIZATIONS'],
         },
       ],
+      '/summaries/': [
+        {
+          text: '技术总结',
+          children: [
+            '/summaries/PROJECT_SUMMARY',
+            '/summaries/IMPLEMENTATION_SUMMARY',
+            '/summaries/STANDARD-MIGRATION-SUMMARY',
+            '/summaries/SECURITY-SUMMARY',
+          ],
+        },
+      ],
     },
 
     plugins: {
       copyCode: { showInMobile: true },
       git: {
+        updatedTime: true,
         contributors: {
           info: contributorInfo,
           transform: (contributors) =>
