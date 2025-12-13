@@ -200,7 +200,7 @@ export default defineUserConfig({
       codeTabs: true,
       tabs: true,
     },
-
+    lastUpdated: true,
     footer: 'Apache-2.0 Licensed | Copyright © 2025-present mumu',
     displayFooter: true,
     author: { name: 'mumu', email: 'yulin.1996@foxmail.com' },

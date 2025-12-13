@@ -10,26 +10,23 @@ category:
 tag:
   - Java
   - Hutool
-  - 跨语言
+  - 对接其他语言
 ---
 
 # Java 对接指南（Hutool / Bouncy Castle）
 
-本页聚焦 Java 端与 GMKitX 的互通，分别给出 Hutool 与 Bouncy Castle（BC）两类示例。其它 Java 库可按相同参数与编码约定替换。其他语言请新建独立指南并复用同一 JSON 向量。
-
-- 对照向量：`test/vectors/interop.json`（SM3/SM4 含确定性期望值，SM2 以“解密=原文/验签成功”为准）。
-- 编码与格式：UTF-8 文本，小写 hex 传递密钥/密文/签名；SM4 PKCS7 = Hutool PKCS5Padding；SM2 默认 C1C3C2。
+本页聚焦 Java 端与 gmkitx 的互通，分别给出 Hutool 与 Bouncy Castle（BC）两类示例。其它 Java 库可按相同参数与编码约定替换。
 
 ## 数据要点
 
-| 项目 | 约定 | 备注 |
-| --- | --- | --- |
-| SM2 公钥 | 非压缩 04+X+Y（130 hex） | 保持与 Java 侧一致 |
-| SM2 私钥 | 64 hex | 参见 `defaults.sm2PrivateKeyHex` |
-| SM2 密文模式 | C1C3C2（默认）、C1C2C3 | 两端一致 |
-| SM4 密钥 | 32 hex（128bit） | |
-| SM4 填充 | PKCS7/PKCS5，或 NONE/ZERO | 流模式不填充 |
-| 传输编码 | UTF-8 + 小写 hex | |
+| 项目       | 约定                      | 备注                             |
+|----------|-------------------------|--------------------------------|
+| SM2 公钥   | 非压缩 04+X+Y（130 hex）     | 保持与 Java 侧一致                   |
+| SM2 私钥   | 64 hex                  | 参见 `defaults.sm2PrivateKeyHex` |
+| SM2 密文模式 | C1C3C2（默认）、C1C2C3       | 两端一致                           |
+| SM4 密钥   | 32 hex（128bit）          |                                |
+| SM4 填充   | PKCS7/PKCS5，或 NONE/ZERO | 流模式不填充                         |
+| 传输编码     | UTF-8 + 小写 hex          |                                |
 
 ## SM2 对接
 
